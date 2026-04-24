@@ -38,38 +38,95 @@ end
 ---@param prompt string
 ---@param callback fun(target: table|nil)
 local function select_target_by_pane_index(candidates, prompt, callback)
-	-- We intentionally do not use vim.ui.select() here because the stock implementation
-	-- hardcodes 1-based list numbering via inputlist(), and we need the visible selector
-	-- index to match the tmux pane_index instead of an arbitrary list position.
-	local ok_config, dressing_config = pcall(require, "dressing.config")
-	local ok_select, dressing_select = pcall(require, "dressing.select")
-	if ok_config and ok_select then
-		local select_opts = {
-			prompt = prompt,
-			format_item = function(candidate)
-				return string.format("[%d] %s", candidate.pane_index or 0, tmux.format_target_label(candidate))
-			end,
-		}
-		local select_config = dressing_config.get_mod_config("select", select_opts, candidates)
-		local backend, backend_name = dressing_select.get_backend(select_config.backend)
-		local backend_config = vim.deepcopy(select_config[backend_name]) or {}
-		if backend_name == "builtin" then
-			backend_config.show_numbers = false
-		end
-		backend.select(backend_config, candidates, select_opts, callback)
-		return
-	end
-
-	local choices = { prompt }
 	local by_index = {}
+	local lines = {}
+	local ordered_targets = {}
 	for _, candidate in ipairs(candidates) do
 		local pane_index = tonumber(candidate.pane_index)
 		if pane_index then
 			by_index[pane_index] = candidate
-			table.insert(choices, string.format("%d: %s", pane_index, tmux.format_target_label(candidate)))
+			table.insert(ordered_targets, candidate)
+			table.insert(lines, string.format("[%d] %s", pane_index, tmux.format_target_label(candidate)))
 		end
 	end
-	callback(by_index[vim.fn.inputlist(choices)])
+
+	local width = math.max(40, #prompt + 4)
+	for _, line in ipairs(lines) do
+		width = math.max(width, #line + 2)
+	end
+	width = math.min(width, math.max(1, vim.o.columns - 4))
+	local height = math.min(#lines, math.max(1, vim.o.lines - 4))
+	local row = math.max(0, math.floor((vim.o.lines - height) / 2) - 1)
+	local col = math.max(0, math.floor((vim.o.columns - width) / 2))
+
+	local buf = vim.api.nvim_create_buf(false, true)
+	local win = vim.api.nvim_open_win(buf, true, {
+		relative = "editor",
+		width = width,
+		height = height,
+		row = row,
+		col = col,
+		style = "minimal",
+		border = "rounded",
+		title = " " .. prompt .. " ",
+		title_pos = "center",
+	})
+
+	vim.bo[buf].bufhidden = "wipe"
+	vim.bo[buf].modifiable = true
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	vim.bo[buf].modifiable = false
+	vim.wo[win].cursorline = true
+
+	local ns = vim.api.nvim_create_namespace("tmux-agent-bridge-pane-selector")
+	for row, line in ipairs(lines) do
+		local pane_index = line:match("^%[(%d+)%]")
+		if pane_index then
+			vim.api.nvim_buf_set_extmark(buf, ns, row - 1, 0, {
+				end_col = #pane_index + 2,
+				hl_group = "TmuxAgentBridgePaneIndex",
+			})
+		end
+	end
+
+	local done = false
+	local function finish(target)
+		if done then
+			return
+		end
+		done = true
+		if vim.api.nvim_win_is_valid(win) then
+			vim.api.nvim_win_close(win, true)
+		end
+		callback(target)
+	end
+
+	for digit = 0, 9 do
+		vim.keymap.set("n", tostring(digit), function()
+			local target = by_index[digit]
+			if target then
+				finish(target)
+			end
+		end, { buffer = buf, nowait = true, silent = true })
+	end
+
+	vim.keymap.set("n", "<CR>", function()
+		local line = vim.api.nvim_win_get_cursor(win)[1]
+		finish(ordered_targets[line])
+	end, { buffer = buf, nowait = true, silent = true })
+	vim.keymap.set("n", "q", function()
+		finish(nil)
+	end, { buffer = buf, nowait = true, silent = true })
+	vim.keymap.set("n", "<Esc>", function()
+		finish(nil)
+	end, { buffer = buf, nowait = true, silent = true })
+	vim.api.nvim_create_autocmd("WinClosed", {
+		once = true,
+		pattern = tostring(win),
+		callback = function()
+			finish(nil)
+		end,
+	})
 end
 
 ---@param opts { agent?: string }|nil
@@ -119,6 +176,7 @@ end
 local function setup_highlights()
 	vim.api.nvim_set_hl(0, "TmuxAgentBridgePlaceholder", { link = "Special" })
 	vim.api.nvim_set_hl(0, "TmuxAgentBridgeContextValue", { link = "String" })
+	vim.api.nvim_set_hl(0, "TmuxAgentBridgePaneIndex", { link = "Keyword" })
 end
 
 ---@param prompt_text string
