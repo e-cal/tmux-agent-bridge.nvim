@@ -52,9 +52,9 @@ end
 ---@param on_submit fun(value: string)
 ---@param on_cancel fun()
 local function buffer_input(default, context, ask_opts, on_submit, on_cancel)
-	local buffer_opts = ask_opts.buffer or {}
-	local width = math.max(buffer_opts.min_width or 60, math.floor(vim.o.columns * (buffer_opts.width_ratio or 0.7)))
-	local height = math.max(buffer_opts.min_height or 8, math.floor(vim.o.lines * (buffer_opts.height_ratio or 0.3)))
+	local buffer_opts = ask_opts.buffer
+	local width = math.max(buffer_opts.min_width, math.floor(vim.o.columns * buffer_opts.width_ratio))
+	local height = math.max(buffer_opts.min_height, math.floor(vim.o.lines * buffer_opts.height_ratio))
 	local row = math.max(1, math.floor((vim.o.lines - height) / 2) - 1)
 	local col = math.max(0, math.floor((vim.o.columns - width) / 2))
 
@@ -68,9 +68,9 @@ local function buffer_input(default, context, ask_opts, on_submit, on_cancel)
 		row = row,
 		col = col,
 		style = "minimal",
-		border = buffer_opts.border or "rounded",
-		title = " " .. (ask_opts.prompt or "Ask agent: ") .. " ",
-		title_pos = buffer_opts.title_pos or "center",
+		border = buffer_opts.border,
+		title = " " .. ask_opts.prompt .. " ",
+		title_pos = buffer_opts.title_pos,
 	})
 
 	vim.bo[buf].bufhidden = "wipe"
@@ -167,8 +167,8 @@ local function buffer_input(default, context, ask_opts, on_submit, on_cancel)
 		})
 	end
 
-	set_mode_keymaps(buf, buffer_opts.submit_keys or { n = { "<CR>" }, i = { "<C-s>" } }, finish_submit)
-	set_mode_keymaps(buf, buffer_opts.cancel_keys or { n = { "q", "<Esc>" }, i = { "<C-c>" } }, finish_cancel)
+	set_mode_keymaps(buf, buffer_opts.submit_keys, finish_submit)
+	set_mode_keymaps(buf, buffer_opts.cancel_keys, finish_cancel)
 
 	if buffer_opts.start_insert ~= false then
 		vim.cmd("startinsert")
@@ -188,7 +188,7 @@ function M.ask(default, context, prompt_override, on_submit, on_cancel)
 
 	if ask_opts.capture == "input" then
 		vim.ui.input({
-			prompt = ask_opts.prompt or "Ask agent: ",
+			prompt = ask_opts.prompt,
 			default = default,
 		}, function(value)
 			if value == nil or value == "" then

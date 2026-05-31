@@ -234,14 +234,14 @@ end
 ---@param agent_name string|nil
 ---@return string[]|nil, string|nil
 local function build_split_args(agent_name)
-	local launch = config.opts.pane.launch or {}
+	local launch = config.opts.pane.launch
 	local cmd, err = launch_command(agent_name)
 	if not cmd then
 		return nil, err
 	end
 
 	local args = { "tmux", "split-window" }
-	local direction = launch.direction or "right"
+	local direction = launch.direction
 	if direction == "right" then
 		table.insert(args, "-h")
 	elseif direction == "left" then
@@ -441,9 +441,9 @@ function M.auto_toggle(pane_id)
 		return
 	end
 
-	local launch = config.opts.pane.launch or {}
+	local launch = config.opts.pane.launch
 	local args = { "tmux", "join-pane" }
-	local direction = launch.direction or "right"
+	local direction = launch.direction
 	if direction == "right" then
 		table.insert(args, "-h")
 	elseif direction == "left" then
@@ -506,7 +506,7 @@ function M.open(agent_name)
 	state.pane_id = pane_id
 	state.agent_name = agent_name
 
-	local launch = config.opts.pane.launch or {}
+	local launch = config.opts.pane.launch
 	if launch.allow_passthrough ~= true then
 		vim.system({ "tmux", "set-option", "-t", pane_id, "-p", "allow-passthrough", "off" }, { text = true }):wait()
 	end

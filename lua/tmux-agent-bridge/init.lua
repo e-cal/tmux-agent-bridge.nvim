@@ -8,6 +8,32 @@ local watcher = require("tmux-agent-bridge.watcher")
 
 local M = {}
 
+---@param keys string|string[]|nil
+---@return string[]
+local function normalize_keys(keys)
+	if type(keys) == "string" then
+		return { keys }
+	end
+	if type(keys) == "table" and vim.islist(keys) then
+		return keys
+	end
+	return {}
+end
+
+---@param buf number
+---@param mode_keys table<string, string[]|string>|nil
+---@param callback function
+local function set_mode_keymaps(buf, mode_keys, callback)
+	if not mode_keys then
+		return
+	end
+	for mode, keys in pairs(mode_keys) do
+		for _, lhs in ipairs(normalize_keys(keys)) do
+			vim.keymap.set(mode, lhs, callback, { buffer = buf, nowait = true, silent = true })
+		end
+	end
+end
+
 ---@param opts table|nil
 ---@return { clear: boolean, submit: boolean, new: boolean, context: tmux_agent_bridge.Context, agent: string|nil }
 local function normalize_prompt_opts(opts)
@@ -38,6 +64,7 @@ end
 ---@param prompt string
 ---@param callback fun(target: table|nil)
 local function select_target_by_pane_index(candidates, prompt, callback)
+	local selector_opts = config.opts.pane.selector
 	local by_index = {}
 	local lines = {}
 	local ordered_targets = {}
@@ -50,7 +77,7 @@ local function select_target_by_pane_index(candidates, prompt, callback)
 		end
 	end
 
-	local width = math.max(40, #prompt + 4)
+	local width = math.max(selector_opts.min_width, #prompt + 4)
 	for _, line in ipairs(lines) do
 		width = math.max(width, #line + 2)
 	end
@@ -67,9 +94,9 @@ local function select_target_by_pane_index(candidates, prompt, callback)
 		row = row,
 		col = col,
 		style = "minimal",
-		border = "rounded",
+		border = selector_opts.border,
 		title = " " .. prompt .. " ",
-		title_pos = "center",
+		title_pos = selector_opts.title_pos,
 	})
 
 	vim.bo[buf].bufhidden = "wipe"
@@ -110,16 +137,13 @@ local function select_target_by_pane_index(candidates, prompt, callback)
 		end, { buffer = buf, nowait = true, silent = true })
 	end
 
-	vim.keymap.set("n", "<CR>", function()
+	set_mode_keymaps(buf, selector_opts.submit_keys, function()
 		local line = vim.api.nvim_win_get_cursor(win)[1]
 		finish(ordered_targets[line])
-	end, { buffer = buf, nowait = true, silent = true })
-	vim.keymap.set("n", "q", function()
+	end)
+	set_mode_keymaps(buf, selector_opts.cancel_keys, function()
 		finish(nil)
-	end, { buffer = buf, nowait = true, silent = true })
-	vim.keymap.set("n", "<Esc>", function()
-		finish(nil)
-	end, { buffer = buf, nowait = true, silent = true })
+	end)
 	vim.api.nvim_create_autocmd("WinClosed", {
 		once = true,
 		pattern = tostring(win),
@@ -168,7 +192,7 @@ local function resolve_target(opts, callback)
 
 	select_target_by_pane_index(
 		candidates,
-		(config.opts.pane.selector and config.opts.pane.selector.prompt) or "Send to coding agent pane",
+		config.opts.pane.selector.prompt,
 		callback
 	)
 end

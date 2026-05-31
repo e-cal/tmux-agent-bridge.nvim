@@ -38,7 +38,7 @@ M.defaults = {
 				i = { "<C-s>" },
 			},
 			cancel_keys = {
-				n = { "q", "<Esc>" },
+				n = { "q" },
 				i = { "<C-c>" },
 			},
 		},
@@ -46,6 +46,15 @@ M.defaults = {
 	pane = {
 		selector = {
 			prompt = "Send to coding agent pane", -- Pane picker title.
+			min_width = 40, -- Minimum pane picker width.
+			border = "rounded", -- Floating window border style.
+			title_pos = "center", -- Floating title alignment.
+			submit_keys = {
+				n = { "<CR>" },
+			},
+			cancel_keys = {
+				n = { "q", "<Esc>" },
+			},
 		},
 		launch = {
 			enabled = true, -- Open a pane when none matches.

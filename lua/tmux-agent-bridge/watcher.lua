@@ -15,7 +15,7 @@ local watcher_state = {
 }
 
 local function watch_opts()
-	return config.opts.watch or {}
+	return config.opts.watch
 end
 
 local function stop_timer()
@@ -87,7 +87,7 @@ local function track_buffer(bufnr, force_refresh)
 	end
 
 	local filetype = vim.bo[bufnr].filetype
-	if (watch_opts().excluded_filetypes or {})[filetype] then
+	if watch_opts().excluded_filetypes[filetype] then
 		return nil
 	end
 
@@ -125,7 +125,7 @@ local function mark_recent_write(path)
 	watcher_state.recent_writes[full_path] = now
 
 	for tracked_path, ts in pairs(watcher_state.recent_writes) do
-		if now - ts > (watch_opts().recent_write_ttl_ms or 1000) then
+		if now - ts > watch_opts().recent_write_ttl_ms then
 			watcher_state.recent_writes[tracked_path] = nil
 		end
 	end
@@ -139,7 +139,7 @@ local function was_recently_written(path)
 		return false
 	end
 
-	if vim.uv.now() - ts > (watch_opts().recent_write_ttl_ms or 1000) then
+	if vim.uv.now() - ts > watch_opts().recent_write_ttl_ms then
 		watcher_state.recent_writes[path] = nil
 		return false
 	end
@@ -158,7 +158,7 @@ local function reload_buffers(changed_paths)
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].buftype == "" then
 			local filetype = vim.bo[bufnr].filetype
-			if not (watch_opts().excluded_filetypes or {})[filetype] then
+			if not watch_opts().excluded_filetypes[filetype] then
 				local name = system.canonical_path(vim.api.nvim_buf_get_name(bufnr))
 				if name and path_in_root(name, root) then
 					if not was_recently_written(name) and (reload_all or changed_paths[name]) then
@@ -204,7 +204,7 @@ local function start_poll_timer()
 	watcher_state.poll_timer = vim.uv.new_timer()
 	watcher_state.poll_timer:start(
 		0,
-		tonumber(watch_opts().poll_interval_ms) or 1000,
+		tonumber(watch_opts().poll_interval_ms),
 		vim.schedule_wrap(function()
 			poll_for_changes()
 		end)
@@ -227,7 +227,7 @@ local function schedule_reload(changed_path)
 	stop_timer()
 	watcher_state.debounce_timer = vim.uv.new_timer()
 	watcher_state.debounce_timer:start(
-		watch_opts().debounce_ms or 150,
+		watch_opts().debounce_ms,
 		0,
 		vim.schedule_wrap(function()
 			local changed_paths = next(watcher_state.paths) and vim.deepcopy(watcher_state.paths) or nil

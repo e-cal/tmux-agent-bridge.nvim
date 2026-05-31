@@ -17,6 +17,16 @@ Example `lazy.nvim` setup:
   "e-cal/tmux-agent-bridge.nvim",
   lazy = false, -- Start watcher/cleanup at startup.
   opts = {
+    -- Prompt capture UI.
+    ask = {
+      buffer = {
+        cancel_keys = {
+          n = { "q" },
+          i = { "<C-c>" },
+        },
+      },
+    },
+
     -- Pane selection and optional pane creation.
     pane = {
       launch = {
