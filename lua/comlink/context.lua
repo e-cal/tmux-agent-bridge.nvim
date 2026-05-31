@@ -1,15 +1,15 @@
-local config = require("tmux-agent-bridge.config")
-local system = require("tmux-agent-bridge.system")
+local config = require("comlink.config")
+local system = require("comlink.system")
 
----@class tmux_agent_bridge.Context
+---@class comlink.Context
 ---@field win integer
 ---@field buf integer
 ---@field cursor integer[]
----@field range? tmux_agent_bridge.context.Range
+---@field range? comlink.context.Range
 local Context = {}
 Context.__index = Context
 
-local ns_id = vim.api.nvim_create_namespace("TmuxAgentBridgeContext")
+local ns_id = vim.api.nvim_create_namespace("ComlinkContext")
 
 ---@param buf number
 ---@return string|nil
@@ -44,13 +44,13 @@ local function last_used_valid_win()
 	return last_used_win
 end
 
----@class tmux_agent_bridge.context.Range
+---@class comlink.context.Range
 ---@field from integer[]
 ---@field to integer[]
 ---@field kind "char"|"line"|"block"
 
 ---@param buf integer
----@return tmux_agent_bridge.context.Range|nil
+---@return comlink.context.Range|nil
 local function selection(buf)
 	local mode = vim.fn.mode()
 	local kind = (mode == "V" and "line") or (mode == "v" and "char") or (mode == "\22" and "block")
@@ -76,7 +76,7 @@ local function selection(buf)
 end
 
 ---@param buf integer
----@param range tmux_agent_bridge.context.Range
+---@param range comlink.context.Range
 local function highlight(buf, range)
 	local end_row = range.to[1] - (range.kind == "line" and 0 or 1)
 	local end_col = nil
@@ -92,11 +92,11 @@ local function highlight(buf, range)
 	})
 end
 
----@type tmux_agent_bridge.Context?
+---@type comlink.Context?
 Context.current = nil
 
----@param range? tmux_agent_bridge.context.Range
----@return tmux_agent_bridge.Context
+---@param range? comlink.context.Range
+---@return comlink.Context
 function Context.new(range)
 	local self = setmetatable({}, Context)
 	self.win = last_used_valid_win()
@@ -134,14 +134,14 @@ function Context:render(prompt)
 		if type(render_fn) == "function" then
 			placeholders[placeholder] = {
 				input = function()
-					return { placeholder, "TmuxAgentBridgePlaceholder" }
+					return { placeholder, "ComlinkPlaceholder" }
 				end,
 				output = function()
 					local ok, value = pcall(render_fn, self)
 					if ok and value then
-						return { value, "TmuxAgentBridgeContextValue" }
+						return { value, "ComlinkContextValue" }
 					end
-					return { placeholder, "TmuxAgentBridgePlaceholder" }
+					return { placeholder, "ComlinkPlaceholder" }
 				end,
 			}
 		end

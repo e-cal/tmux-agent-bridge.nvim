@@ -1,4 +1,4 @@
-local config = require("tmux-agent-bridge.config")
+local config = require("comlink.config")
 
 local M = {
 	opts = vim.deepcopy(config.defaults),

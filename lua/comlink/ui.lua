@@ -1,4 +1,4 @@
-local config = require("tmux-agent-bridge.config")
+local config = require("comlink.config")
 
 local M = {}
 
@@ -29,7 +29,7 @@ local function set_mode_keymaps(buf, mode_keys, callback)
 end
 
 ---@param buf number
----@param context tmux_agent_bridge.Context
+---@param context comlink.Context
 ---@param ns number
 local function highlight_buffer(buf, context, ns)
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
@@ -47,7 +47,7 @@ local function highlight_buffer(buf, context, ns)
 end
 
 ---@param default string|nil
----@param context tmux_agent_bridge.Context
+---@param context comlink.Context
 ---@param ask_opts table
 ---@param on_submit fun(value: string)
 ---@param on_cancel fun()
@@ -74,7 +74,7 @@ local function buffer_input(default, context, ask_opts, on_submit, on_cancel)
 	})
 
 	vim.bo[buf].bufhidden = "wipe"
-	vim.bo[buf].filetype = "tmux_agent_bridge_ask"
+	vim.bo[buf].filetype = "comlink_ask"
 	vim.bo[buf].buftype = ""
 	vim.bo[buf].swapfile = false
 
@@ -109,7 +109,7 @@ local function buffer_input(default, context, ask_opts, on_submit, on_cancel)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, initial)
 	vim.api.nvim_win_set_cursor(win, { cursor_row, 0 })
 
-	local ns = vim.api.nvim_create_namespace("tmux-agent-bridge-ask-highlight")
+	local ns = vim.api.nvim_create_namespace("comlink-ask-highlight")
 	highlight_buffer(buf, context, ns)
 
 	local done = false
@@ -176,7 +176,7 @@ local function buffer_input(default, context, ask_opts, on_submit, on_cancel)
 end
 
 ---@param default string|nil
----@param context tmux_agent_bridge.Context
+---@param context comlink.Context
 ---@param prompt_override string|nil
 ---@param on_submit fun(value: string)
 ---@param on_cancel fun()

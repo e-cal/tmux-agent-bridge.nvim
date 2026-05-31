@@ -1,4 +1,4 @@
-# tmux-agent-bridge.nvim
+# comlink.nvim
 
 General tmux bridge for sending prompts from Neovim to coding-agent TUIs running in sibling tmux panes.
 
@@ -14,7 +14,7 @@ Example `lazy.nvim` setup:
 
 ```lua
 {
-  "e-cal/tmux-agent-bridge.nvim",
+  "e-cal/comlink.nvim",
   lazy = false, -- Start watcher/cleanup at startup.
   opts = {
     -- Prompt capture UI.
@@ -72,7 +72,7 @@ Why `lazy = false`?
 - `setup()` also registers the plugin's tmux cleanup on `VimLeavePre`.
 - If the plugin is only loaded on first keypress, those background behaviors are missing until after the first use.
 
-If you only use `tmux-agent-bridge.nvim` as an on-demand prompt sender and do not care about startup watchers or exit cleanup before first use, lazy-loading is fine.
+If you only use `comlink.nvim` as an on-demand prompt sender and do not care about startup watchers or exit cleanup before first use, lazy-loading is fine.
 
 ## Placeholder Expressions
 
@@ -99,14 +99,14 @@ Built-in placeholders:
 Example:
 
 ```lua
-require("tmux-agent-bridge").prompt("Review @selection and check related changes in @diff", { submit = true })
+require("comlink").prompt("Review @selection and check related changes in @diff", { submit = true })
 ```
 
 Customize placeholders with `opts.contexts`:
 
 ```lua
 {
-  "e-cal/tmux-agent-bridge.nvim",
+  "e-cal/comlink.nvim",
   opts = {
     contexts = {
       ["@code"] = function(ctx)
@@ -148,65 +148,65 @@ Use lazy.nvim's `keys`, or setup keymaps calling the api functions directly.
 
 ### Public API
 
-- `require("tmux-agent-bridge").setup(opts)`
-- `require("tmux-agent-bridge").ask(default, opts)`
-- `require("tmux-agent-bridge").prompt(text, opts)`
-- `require("tmux-agent-bridge").select()`
-- `require("tmux-agent-bridge").toggle(agent_name)`
-- `require("tmux-agent-bridge").send_keys(keys, opts)`
+- `require("comlink").setup(opts)`
+- `require("comlink").ask(default, opts)`
+- `require("comlink").prompt(text, opts)`
+- `require("comlink").select()`
+- `require("comlink").toggle(agent_name)`
+- `require("comlink").send_keys(keys, opts)`
 
 ### Example Keymaps
 
 ```lua
 {
-  "e-cal/tmux-agent-bridge.nvim",
+  "e-cal/comlink.nvim",
   keys = {
     {
       "<leader>aa",
       function()
-        require("tmux-agent-bridge").ask("@buffer ", { submit = true })
+        require("comlink").ask("@buffer ", { submit = true })
       end,
       desc = "Ask agent",
     },
     {
       "<leader>an",
       function()
-        require("tmux-agent-bridge").ask("@buffer ", { new = true, submit = true })
+        require("comlink").ask("@buffer ", { new = true, submit = true })
       end,
       desc = "Ask agent in new thread",
     },
     {
       "<leader>as",
       function()
-        require("tmux-agent-bridge").select()
+        require("comlink").select()
       end,
       desc = "Select prompt preset",
     },
     {
       "<leader>at",
       function()
-        require("tmux-agent-bridge").toggle()
+        require("comlink").toggle()
       end,
       desc = "Toggle agent pane",
     },
     {
       "<leader>ad",
       function()
-        require("tmux-agent-bridge").ask("@diff ")
+        require("comlink").ask("@diff ")
       end,
       desc = "Ask about git diff",
     },
     {
       "<leader>ae",
       function()
-        require("tmux-agent-bridge").ask("@diagnostics ")
+        require("comlink").ask("@diagnostics ")
       end,
       desc = "Ask about diagnostics",
     },
     {
       "<leader>ac",
       function()
-        require("tmux-agent-bridge").prompt(
+        require("comlink").prompt(
           "Follow any instructions in the selected code and complete the functionality:\n\n@selection",
           { submit = true }
         )
@@ -217,7 +217,7 @@ Use lazy.nvim's `keys`, or setup keymaps calling the api functions directly.
     {
       "<leader>ar",
       function()
-        require("tmux-agent-bridge").prompt("Review @this for correctness and readability", { submit = true })
+        require("comlink").prompt("Review @this for correctness and readability", { submit = true })
       end,
       mode = "x",
       desc = "Review selection",
@@ -225,7 +225,7 @@ Use lazy.nvim's `keys`, or setup keymaps calling the api functions directly.
     {
       "<leader>at",
       function()
-        require("tmux-agent-bridge").prompt("Add tests for @this", { submit = true })
+        require("comlink").prompt("Add tests for @this", { submit = true })
       end,
       mode = "x",
       desc = "Generate tests",
@@ -233,14 +233,14 @@ Use lazy.nvim's `keys`, or setup keymaps calling the api functions directly.
     {
       "<S-C-u>",
       function()
-        require("tmux-agent-bridge").send_keys("PageUp", { agent = "opencode" })
+        require("comlink").send_keys("PageUp", { agent = "opencode" })
       end,
       desc = "Scroll agent pane up",
     },
     {
       "<S-C-d>",
       function()
-        require("tmux-agent-bridge").send_keys("PageDown", { agent = "opencode" })
+        require("comlink").send_keys("PageDown", { agent = "opencode" })
       end,
       desc = "Scroll agent pane down",
     },

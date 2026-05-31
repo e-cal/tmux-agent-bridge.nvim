@@ -1,10 +1,10 @@
 local M = {}
 
-local DEBUG_LOG_PATH = "/tmp/tmux-agent-bridge-debug.log"
+local DEBUG_LOG_PATH = "/tmp/comlink-debug.log"
 
 ---@return boolean
 local function debug_enabled()
-	local ok, state = pcall(require, "tmux-agent-bridge.state")
+	local ok, state = pcall(require, "comlink.state")
 	return ok and state.opts and state.opts.debug == true
 end
 
@@ -48,7 +48,7 @@ end
 ---@param message string
 ---@param level? integer
 function M.notify(message, level)
-	vim.notify("tmux-agent-bridge: " .. message, level or vim.log.levels.INFO, { title = "tmux-agent-bridge" })
+	vim.notify("comlink: " .. message, level or vim.log.levels.INFO, { title = "comlink" })
 end
 
 ---@param message string

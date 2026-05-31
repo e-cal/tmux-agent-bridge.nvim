@@ -1,10 +1,10 @@
-local config = require("tmux-agent-bridge.config")
-local state = require("tmux-agent-bridge.state")
-local system = require("tmux-agent-bridge.system")
+local config = require("comlink.config")
+local state = require("comlink.state")
+local system = require("comlink.system")
 
 local M = {}
 
-local STASH_SESSION = "__tmux_agent_bridge_stash"
+local STASH_SESSION = "__comlink_stash"
 ---@param keys string|string[]|nil
 ---@return string[]
 local function normalize_keys(keys)
@@ -310,7 +310,7 @@ local function send_text_to_pane(pane_id, text)
 		return false, tostring(write_err)
 	end
 
-	local buffer_name = "tmux-agent-bridge-paste"
+	local buffer_name = "comlink-paste"
 	local load_result = vim.system({ "tmux", "load-buffer", "-b", buffer_name, temp_path }, { text = true }):wait()
 	pcall(vim.fn.delete, temp_path)
 	if load_result.code ~= 0 then

@@ -1,5 +1,5 @@
-local config = require("tmux-agent-bridge.config")
-local system = require("tmux-agent-bridge.system")
+local config = require("comlink.config")
+local system = require("comlink.system")
 
 local M = {}
 
@@ -107,7 +107,7 @@ local function notify_reload(path)
 	if watch_opts().notify == false then
 		return
 	end
-		vim.notify("Reloading " .. display_path(path), vim.log.levels.INFO, { title = "tmux-agent-bridge" })
+		vim.notify("Reloading " .. display_path(path), vim.log.levels.INFO, { title = "comlink" })
 end
 
 ---@param path string|nil
@@ -255,9 +255,9 @@ local function start_watcher(root)
 			vim.schedule_wrap(function(watch_err, changed_path)
 				if watch_err then
 					vim.notify(
-				"tmux-agent-bridge watch: " .. tostring(watch_err),
+				"comlink watch: " .. tostring(watch_err),
 						vim.log.levels.WARN,
-				{ title = "tmux-agent-bridge" }
+				{ title = "comlink" }
 					)
 					return
 				end
@@ -268,8 +268,8 @@ local function start_watcher(root)
 
 	if not ok then
 		watcher:close()
-			vim.notify("tmux-agent-bridge watch: failed to watch " .. root .. ": " .. tostring(err), vim.log.levels.ERROR, {
-				title = "tmux-agent-bridge",
+			vim.notify("comlink watch: failed to watch " .. root .. ": " .. tostring(err), vim.log.levels.ERROR, {
+				title = "comlink",
 			})
 		return
 	end
@@ -292,7 +292,7 @@ function M.setup()
 		return
 	end
 
-	watcher_state.group = vim.api.nvim_create_augroup("TmuxAgentBridgeWatch", { clear = true })
+	watcher_state.group = vim.api.nvim_create_augroup("ComlinkWatch", { clear = true })
 	vim.o.autoread = true
 	start_watcher(vim.fn.getcwd())
 	start_poll_timer()

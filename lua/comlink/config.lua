@@ -1,6 +1,6 @@
 local M = {}
 
----@class tmux_agent_bridge.PromptSpec
+---@class comlink.PromptSpec
 ---@field prompt string # Prompt text with placeholders like @this.
 ---@field ask? boolean # Open the ask UI before sending.
 ---@field submit? boolean # Press the agent's submit keys after sending.
@@ -8,16 +8,16 @@ local M = {}
 ---@field clear? boolean # Clear existing input before sending.
 ---@field description? string # Label shown in prompt pickers.
 
----@class tmux_agent_bridge.Opts
+---@class comlink.Opts
 ---@field debug? boolean # Enable debug logging.
 ---@field ask? table # Prompt capture UI options.
 ---@field pane? table # Pane selection and launch options.
 ---@field watch? table # External file change reload behavior.
 ---@field agents? table<string, table> # Agent detection and key mappings.
----@field contexts? table<string, fun(context: tmux_agent_bridge.Context): string|nil>|table<string, false> # Placeholder renderers.
----@field prompts? table<string, tmux_agent_bridge.PromptSpec|false> # Named prompt presets.
+---@field contexts? table<string, fun(context: comlink.Context): string|nil>|table<string, false> # Placeholder renderers.
+---@field prompts? table<string, comlink.PromptSpec|false> # Named prompt presets.
 
----@type tmux_agent_bridge.Opts
+---@type comlink.Opts
 M.defaults = {
 	debug = false, -- Log tmux/system details to /tmp for troubleshooting.
 	ask = {
@@ -182,11 +182,11 @@ M.defaults = {
 	},
 }
 
----@type tmux_agent_bridge.Opts
+---@type comlink.Opts
 M.opts = vim.deepcopy(M.defaults)
 
----@param opts? tmux_agent_bridge.Opts
----@return tmux_agent_bridge.Opts
+---@param opts? comlink.Opts
+---@return comlink.Opts
 function M.setup(opts)
 	M.opts = vim.tbl_deep_extend("force", vim.deepcopy(M.defaults), opts or {})
 

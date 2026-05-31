@@ -1,10 +1,10 @@
-local config = require("tmux-agent-bridge.config")
-local Context = require("tmux-agent-bridge.context")
-local state = require("tmux-agent-bridge.state")
-local system = require("tmux-agent-bridge.system")
-local tmux = require("tmux-agent-bridge.tmux")
-local ui = require("tmux-agent-bridge.ui")
-local watcher = require("tmux-agent-bridge.watcher")
+local config = require("comlink.config")
+local Context = require("comlink.context")
+local state = require("comlink.state")
+local system = require("comlink.system")
+local tmux = require("comlink.tmux")
+local ui = require("comlink.ui")
+local watcher = require("comlink.watcher")
 
 local M = {}
 
@@ -35,7 +35,7 @@ local function set_mode_keymaps(buf, mode_keys, callback)
 end
 
 ---@param opts table|nil
----@return { clear: boolean, submit: boolean, new: boolean, context: tmux_agent_bridge.Context, agent: string|nil }
+---@return { clear: boolean, submit: boolean, new: boolean, context: comlink.Context, agent: string|nil }
 local function normalize_prompt_opts(opts)
 	return {
 		clear = opts and opts.clear or false,
@@ -105,13 +105,13 @@ local function select_target_by_pane_index(candidates, prompt, callback)
 	vim.bo[buf].modifiable = false
 	vim.wo[win].cursorline = true
 
-	local ns = vim.api.nvim_create_namespace("tmux-agent-bridge-pane-selector")
+	local ns = vim.api.nvim_create_namespace("comlink-pane-selector")
 	for row, line in ipairs(lines) do
 		local pane_index = line:match("^%[(%d+)%]")
 		if pane_index then
 			vim.api.nvim_buf_set_extmark(buf, ns, row - 1, 0, {
 				end_col = #pane_index + 2,
-				hl_group = "TmuxAgentBridgePaneIndex",
+				hl_group = "ComlinkPaneIndex",
 			})
 		end
 	end
@@ -198,9 +198,9 @@ local function resolve_target(opts, callback)
 end
 
 local function setup_highlights()
-	vim.api.nvim_set_hl(0, "TmuxAgentBridgePlaceholder", { link = "Special" })
-	vim.api.nvim_set_hl(0, "TmuxAgentBridgeContextValue", { link = "String" })
-	vim.api.nvim_set_hl(0, "TmuxAgentBridgePaneIndex", { link = "Keyword" })
+	vim.api.nvim_set_hl(0, "ComlinkPlaceholder", { link = "Special" })
+	vim.api.nvim_set_hl(0, "ComlinkContextValue", { link = "String" })
+	vim.api.nvim_set_hl(0, "ComlinkPaneIndex", { link = "Keyword" })
 end
 
 ---@param prompt_text string
@@ -266,7 +266,7 @@ function M.select()
 	end
 
 	vim.ui.select(items, {
-		prompt = "tmux-agent-bridge",
+		prompt = "comlink",
 		format_item = function(item)
 			local description = item.prompt.description
 			if description and description ~= "" then
@@ -310,14 +310,14 @@ function M.toggle(agent_name)
 	tmux.toggle(agent_name)
 end
 
----@param opts? tmux_agent_bridge.Opts
+---@param opts? comlink.Opts
 function M.setup(opts)
 	state.opts = config.setup(opts)
 	setup_highlights()
 	watcher.setup()
 
 	vim.api.nvim_create_autocmd("VimLeavePre", {
-		group = vim.api.nvim_create_augroup("TmuxAgentBridgeCleanup", { clear = true }),
+		group = vim.api.nvim_create_augroup("ComlinkCleanup", { clear = true }),
 		callback = function()
 			watcher.stop()
 			local pane_id = tmux.get_managed_pane_id()
